@@ -1,0 +1,72 @@
+<?php
+// minimale Druckbogengroesse (A5)
+	$page_minwidth	= 210; 
+	$page_minheight	= 145; 
+
+// maximale Druckbogengroesse (mehr nicht möglich. oder?)
+	$page_maxwidth	= 5080; 
+	$page_maxheight	= 5080; 
+
+
+//------------------------------------------------------------------
+// Seitenlaengen anhand XML berechnen
+//------------------------------------------------------------------
+
+	// XML-Breite + 20% Puffer
+	$file_width = $family_maxwidth;
+#	$file_width = $file_width * 0.8;
+
+	// XML-Hoehe = margintop							+ halber margintop    		 + Boxhoehe 								+ Linienhoehe*2          					+ 4 Zwischenraeume       																																		 *Anzahl Zeilen         
+#	$file_height = (( $size['offset']['box']['y'] + ($size['offset']['box']['y']/2) )+( (( ($size['box']['max_height']+$size['length']['line']['vertical'])*2 )+( $size['margin']['box']['y']*4 )+( $size['leading'][2]+($size['padding']['box']+$size['margin']['box']['y']*2)))*$xml->vars->count->generations));
+
+	// XML-Hoehe = 	pagemargins																				 + (pro Generation 2*BoxHoehe, 1*Beziehungsdatum, 4 Zwischenraeume, 2*Linienhoehe       																																		 *Anzahl Zeilen         
+	$file_height = 	$size['margin']['top'] + $size['margin']['bottom'] + ($xml->vars->count->generations * ((2*$size['box']['max_height'])+$size['box']['rel']['max_height']+(4*$size['margin']['box']['y'])+(2*$size['length']['line']['vertical']))); 
+	// + 5% Puffer - sonst bug bei bestimmtem box_margin (<3)
+	#$file_height = $file_height * 1.05;
+
+	
+//------------------------------------------------------------------
+// Wenn Laenge oder Breite groesser als der maximale Druckbogen ist, wird Faktor Skalierung berechnet (default = 1)
+//------------------------------------------------------------------
+	// Skalierungsfaktor  
+	$scaling = 1;
+
+	// Wenn XML-Inhalt zu groß für max. Druckbogengroesse
+	if($file_width > $page_maxwidth || $file_height > $page_maxheight) {		
+		// Skalierungsfaktoren berechnen (jede Seite)
+		$scalingX = ($file_width > $page_maxwidth ? $page_maxwidth/$file_width : $scaling);
+		$scalingY = ($file_height > $page_maxheight ? $page_maxheight/$file_height : $scaling);
+		// Pruefung, welcher Faktor staerker ist
+		$scaling = ($scalingX < $scalingY ? $scalingX : $scalingY);
+	}
+	
+# Testing
+#	$scaling = 0.5;
+	
+	// Seitenlaengen
+	$page_width	= $file_width * $scaling;
+	$page_height = $file_height * $scaling;
+
+	
+	// Wenn XML-Inhalt kürzer oder schmäler als A5-Breite/-Höhe
+	if($file_width < $page_minwidth)
+		$page_width	= $page_minwidth;
+	if($file_height < $page_minheight)
+		$page_height = $page_minheight;
+
+	/*
+	// DEBUG ---------------------------
+	echo $file_width.'<br>';
+	echo $file_height.'<br>';
+	echo $page_width.'<br>';
+	echo $page_height.'<br>';
+	echo $scaling.'<br>';
+	exit;
+	*/
+	
+	if($page_height > $page_width){
+		define('PDF_PAGE_ORIENTATION', 'P');
+	}else{
+		define('PDF_PAGE_ORIENTATION', 'L');
+	}
+?>

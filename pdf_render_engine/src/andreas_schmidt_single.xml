@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <vars>
+    <gedcom>
+      <file>d_andreas_schmidt.ged</file>
+      <version>5.5</version>
+      <form>LINEAGE-LINKED</form>
+      <charset>ASCII</charset>
+      <timestamp>2010-7-8 17:57:03</timestamp>
+      <source>
+        <name>GeneWeb</name>
+        <version>5.00</version>
+      </source>
+    </gedcom>
+    <count>
+      <generations>2</generations>
+      <columns>1</columns>
+      <people>2</people>
+    </count>
+  </vars>
+  <generations type="d">
+    <generation level="0">
+      <person id="3777" uid="3777-0-0" parent_id="" pos="0"
+      width="1" living="0">
+        <firstname>
+          <default length="7">Andreas</default>
+          <short>Andreas</short>
+          <shorter>Andreas</shorter>
+          <shortest>A.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>17.12.1835</date>
+          <year>1835</year>
+        </birth>
+        <death>
+          <date>24.12.1898</date>
+          <year>1898</year>
+        </death>
+        <age>63 Jahre</age>
+        <occupation>Landwirt</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+    <generation level="1">
+      <person id="3778" uid="3778-1-0" parent_id="3777" pos="0"
+      width="1" living="0">
+        <firstname>
+          <default length="15">Maria Magdalena</default>
+          <short>Maria M.</short>
+          <shorter>Maria</shorter>
+          <shortest>M.</shortest>
+        </firstname>
+        <lastname>
+          <default length="9">Schneider</default>
+        </lastname>
+        <sex>f</sex>
+        <birth>
+          <date>18.08.1838</date>
+          <year>1838</year>
+        </birth>
+        <death>
+          <date>21.09.1871</date>
+          <year>1871</year>
+        </death>
+        <age>33 Jahre</age>
+        <relation partner_id="3777">
+          <wedding>
+            <date>10.03.1863</date>
+            <year>1863</year>
+          </wedding>
+          <type>married</type>
+        </relation>
+        <occupation></occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+  </generations>
+</root>

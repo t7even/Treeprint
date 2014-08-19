@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <vars>
+    <gedcom>
+      <file>d_andreas_schmidt.ged</file>
+      <version>5.5</version>
+      <form>LINEAGE-LINKED</form>
+      <charset>ASCII</charset>
+      <timestamp>2009-12-4 21:44:44</timestamp>
+      <source>
+        <name>GeneWeb</name>
+        <version>5.00</version>
+      </source>
+    </gedcom>
+    <count>
+      <generations>3</generations>
+      <columns>6</columns>
+      <people>11</people>
+    </count>
+  </vars>
+  <generations type="d">
+    <generation level="0">
+      <person id="3685" uid="3685-0-0" parent_id="" pos="0"
+      width="6" living="1">
+        <firstname>
+          <default length="5">Willi</default>
+          <short>Willi</short>
+          <shorter>Willi</shorter>
+          <shortest>W.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>17.03.1953</date>
+          <year>1953</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>57 Jahre</age>
+        <occupation>Technischer Oberlehrer</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+    <generation level="1">
+      <person id="3686" uid="3686-1-0" parent_id="3685" pos="0"
+      width="6" living="1">
+        <firstname>
+          <default length="9">Edeltraud</default>
+          <short>Edeltraud</short>
+          <shorter>Edeltraud</shorter>
+          <shortest>E.</shortest>
+        </firstname>
+        <lastname>
+          <default length="5">Adler</default>
+        </lastname>
+        <sex>f</sex>
+        <birth>
+          <date>02.11.1954</date>
+          <year>1954</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>55 Jahre</age>
+        <relation partner_id="3685">
+          <wedding>
+            <date>24.04.1976</date>
+            <year>1976</year>
+          </wedding>
+          <type>married</type>
+        </relation>
+        <occupation>Kinderkrankenschwester</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+    <generation level="2">
+      <person id="3689" uid="3689-2-0" parent_id="3686" pos="0"
+      width="1" living="1">
+        <firstname>
+          <default length="5">David</default>
+          <short>David</short>
+          <shorter>David</shorter>
+          <shortest>D.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>08.09.1977</date>
+          <year>1977</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>32 Jahre</age>
+        <occupation>Technical Project Manager,
+        Developer</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="3690" uid="3690-2-1" parent_id="3686" pos="1"
+      width="3" living="1">
+        <firstname>
+          <default length="5">Diana</default>
+          <short>Diana</short>
+          <shorter>Diana</shorter>
+          <shortest>D.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>f</sex>
+        <birth>
+          <date>03.08.1979</date>
+          <year>1979</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>30 Jahre</age>
+        <occupation>Europasekretärin</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="3691" uid="3691-2-4" parent_id="3686" pos="4"
+      width="1" living="1">
+        <firstname>
+          <default length="8">Philemon</default>
+          <short>Philemon</short>
+          <shorter>Philemon</shorter>
+          <shortest>P.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>26.06.1981</date>
+          <year>1981</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>28 Jahre</age>
+        <occupation>Mediengestalter</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="3692" uid="3692-2-5" parent_id="3686" pos="5"
+      width="1" living="1">
+        <firstname>
+          <default length="5">Alina</default>
+          <short>Alina</short>
+          <shorter>Alina</shorter>
+          <shortest>A.</shortest>
+        </firstname>
+        <lastname>
+          <default length="7">Schmidt</default>
+        </lastname>
+        <sex>f</sex>
+        <birth>
+          <date>22.08.1988</date>
+          <year>1988</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>21 Jahre</age>
+        <occupation>Kauffrau für Bürokommunikation</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+    <generation level="3">
+      <person id="3693" uid="3693-3-1" parent_id="3690" pos="1"
+      width="3" living="1">
+        <firstname>
+          <default length="7">Michael</default>
+          <short>Michael</short>
+          <shorter>Michael</shorter>
+          <shortest>M.</shortest>
+        </firstname>
+        <lastname>
+          <default length="5">Jenny</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>18.11.1974</date>
+          <year>1974</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>35 Jahre</age>
+        <relation partner_id="3690">
+          <wedding>
+            <date>27.07.2002</date>
+            <year>2002</year>
+          </wedding>
+          <type>married</type>
+        </relation>
+        <occupation>Dipl.-Verfahrenstechniker</occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="75" uid="75-3-4" parent_id="3691" pos="4"
+      width="1" living="1">
+        <firstname>
+          <default length="5">Angie</default>
+          <short>Angie</short>
+          <shorter>Angie</shorter>
+          <shortest>A.</shortest>
+        </firstname>
+        <lastname>
+          <default length="6">Bothor</default>
+        </lastname>
+        <sex>f</sex>
+        <birth>
+          <date>26.02.1981</date>
+          <year>1981</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>29 Jahre</age>
+        <relation partner_id="3691">
+          <wedding>
+            <date>__.__.____</date>
+            <year>____</year>
+          </wedding>
+          <type>unmarried</type>
+        </relation>
+        <occupation></occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+    <generation level="4">
+      <person id="3696" uid="3696-4-1" parent_id="3693" pos="1"
+      width="1" living="1">
+        <firstname>
+          <default length="4">Arif</default>
+          <short>Arif</short>
+          <shorter>Arif</shorter>
+          <shortest>A.</shortest>
+        </firstname>
+        <lastname>
+          <default length="5">Jenny</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>07.07.2003</date>
+          <year>2003</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>6 Jahre</age>
+        <occupation></occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="3697" uid="3697-4-2" parent_id="3693" pos="2"
+      width="1" living="1">
+        <firstname>
+          <default length="4">Noel</default>
+          <short>Noel</short>
+          <shorter>Noel</shorter>
+          <shortest>N.</shortest>
+        </firstname>
+        <lastname>
+          <default length="5">Jenny</default>
+        </lastname>
+        <sex>m</sex>
+        <birth>
+          <date>28.04.2006</date>
+          <year>2006</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>3 Jahre</age>
+        <occupation></occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+      <person id="3698" uid="3698-4-3" parent_id="3693" pos="3"
+      width="1" living="1">
+        <firstname>
+          <default length="2">NN</default>
+          <short>NN</short>
+          <shorter>NN</shorter>
+          <shortest>N.</shortest>
+        </firstname>
+        <lastname>
+          <default length="5">Jenny</default>
+        </lastname>
+        <sex></sex>
+        <birth>
+          <date>__.__.____</date>
+          <year>____</year>
+        </birth>
+        <death>
+          <date></date>
+          <year></year>
+        </death>
+        <age>__ Jahre</age>
+        <occupation></occupation>
+        <title>
+          <name></name>
+          <location></location>
+        </title>
+      </person>
+    </generation>
+  </generations>
+</root>

@@ -1,0 +1,13 @@
+<?php
+// Header
+	// Stammbaum von VORNAME NACHNAME
+	$content_title = 'Stammbaum von '.$xml->generations->generation->person->firstname->full.' '.$xml->generations->generation->person->lastname->full;
+
+	// Insgesamt XX Personen in XX Generationen (X Spalten)
+	$content_stats = 'Insgesamt '.$xml->vars->count->people.' Personen in '.$xml->vars->count->generations.' Generationen ('.$xml->vars->count->columns.' Spalten)';
+	
+
+// Footer
+	// XML generiert aus der Datei DATEINAME.ged vom TT.MM.JJJJ um HH:MM:SS Uhr ';
+	$content_footer = 'XML generiert aus der Datei \''.$xml->vars->gedcom->file.'\' vom '.date('j.n.Y \u\m H:i:s', strtotime($xml->vars->gedcom->timestamp)).' Uhr';
+?>

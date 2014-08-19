@@ -1,0 +1,290 @@
+<?php
+require('tcpdf/tcpdf.php');
+
+class XML2PDF extends TCPDF {
+	
+  public function Header() {
+		// Titel
+		$this->SetFont(FONTFAM_TITLE,'',FONTSIZE_TITLE); // Hauptschrift: Schriftauswahl, Schriftgroesse
+		$this->Cell(0, 10, $this->header_title, B, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+
+		// Meta-Info
+		$this->SetFont(FONTFAM_SUBTITLE,'',FONTSIZE_SUBTITLE); // Sekundaerschrift: Schriftauswahl, Schriftgroesse
+		$this->Cell(0, 8, $this->header_string, 0, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+  }
+    
+  public function Footer() {
+		// Custom text
+		$this->SetY(-13.5);
+    $this->Cell(0, 0, FOOTER_DATA, 0, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+    // Pagenumber
+#   $this->Cell(0, 10, 'Page '.$this->getAliasNumPage().'/'.$this->getAliasNbPages(), 0, 0, 'C');
+    //Logo
+    $this->ImageEps(PATH_TEMPLATES.DEFAULT_LOGO, FOOTER_OFFSET_X_LOGO, FOOTER_OFFSET_Y_LOGO, 30, 15);
+  }
+
+
+	function PrintPerson($posX, $posY, $width, $sex = 'm', $firstname = 'unknown', $lastname = 'unknown', $birthdate = 'unknown', $deathdate = 'none', $age = 'none', $partner = TRUE, $reltype = 'none', $marriagedate = 'unknown', $divorcedate = 'none', $gen_divorced = FALSE){  
+
+		// oberer Margin
+		$posY = $posY+BOX_MARGIN_Y; 		
+
+		// Defaults
+		$this->SetXY($posX,$posY);
+		$posX_padding = $posX+BOX_PADDING;
+		$posY_padding = $posY+BOX_PADDING;
+		$this->SetLineWidth(LINESIZE_BOX);
+		$this->SetLineStyle(array('width' => LINESIZE_BOX, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BOX, 'color' => array(LINECOLOR_BOX)));
+
+		// Box-Hintergrund
+		if(BOX_BACKGROUND == 1)
+			$this->SetFillColor(BOX_BACKGROUND_COLOR_R,BOX_BACKGROUND_COLOR_G,BOX_BACKGROUND_COLOR_B); // Hintergrund farbig
+			
+		
+		// Wenn Person == 'Partner', Beziehungsdaten ausgeben (inkl ggf. Symbole)
+		if($partner){
+			
+#			if(BOX_BORDER){
+
+				// Wenn geschieden, Beziehungs-Box größer zeichnen, sonst normal
+				if($divorcedate != 'none' && $divorcedate != '')
+					$this->Cell(BOX_MINWIDTH+(BOX_PADDING*2), LINEHEIGHT_2+LINESPACE_1+LINEHEIGHT_2+(BOX_PADDING*2), '', BOX_BORDER, 1, TEXTALIGN, BOX_BACKGROUND);
+				else
+					$this->Cell(BOX_MINWIDTH+(BOX_PADDING*2), LINEHEIGHT_2+(BOX_PADDING*2), '', BOX_BORDER, 1, TEXTALIGN, BOX_BACKGROUND);
+  	
+				// Padding fuer Inhalt
+				$this->SetXY($posX_padding,$posY_padding);
+#			}
+  	
+			// Heiratsdatum
+			if ($reltype == 'married' || $reltype == 'divorced') {
+				$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX_padding+OFFSET_X_MARRIAGE, $posY_padding+OFFSET_Y_MARRIAGE, 2.2*1.3, 3.5);
+				$posX_indent = $posX_padding+TEXTINDENT_DATES;
+			}else{
+				$posX_indent = $posX_padding;
+			}
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($marriagedate == 'unknown'){
+				$this->SetLineStyle(array('width' => LINESIZE_DATES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_indent+0.2, $posY_padding+(LINEHEIGHT_2*0.8), $posX_padding+BOX_MINWIDTH, $posY_padding+(LINEHEIGHT_2*0.8));
+				$this->Ln(LINEHEIGHT_2); //Zeilenhoehe 2
+			}else{
+				$this->SetX($posX_indent); // indent to current position instead of linestart/pageborder
+				$this->Cell(BOX_MINWIDTH-TEXTINDENT_DATES, LINEHEIGHT_2, $marriagedate, BORDER_DATES, 1, TEXTALIGN);
+			}
+			
+			// Wenn Scheidung in Generation vorhanden
+			if($gen_divorced == TRUE){
+				if(($reltype == 'divorced') || ($divorcedate != 'none' && $divorcedate != '')){
+					// Wenn aktuelle Person geschieden, Datum mit Symbol ausgeben
+					if ($reltype == 'divorced'){
+						$posY = $this->GetY(); // current Y coordinate
+						$this->ImageEps(PATH_TEMPLATE.IMAGE_DIVORCE, $posX_padding+OFFSET_X_DIVORCE, $posY+OFFSET_Y_DIVORCE, 2.2*1.3, 3.5);
+					}
+					if($divorcedate != 'none' && $divorcedate != ''){
+						// Wenn Datum nicht bekannt, Platzhalter zeichnen
+						if($divorcedate == '__.__.____'){
+							$this->SetLineStyle(array('width' => LINESIZE_DATES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+							$this->Line($posX_indent+0.2, $posY+(LINEHEIGHT_2*0.8), $posX_padding+BOX_MINWIDTH, $posY+(LINEHEIGHT_2*0.8));
+							$this->Ln(LINEHEIGHT_2); //Zeilenhoehe 2
+						}else{
+							$this->SetX($posX_indent); // indent to current position instead of linestart/pageborder
+							$this->Cell(BOX_MINWIDTH-TEXTINDENT_DATES, LINEHEIGHT_2, $divorcedate, BORDER_DATES, 1, TEXTALIGN);
+						}
+					}
+				
+				}else{
+					// Sonst hier nur Leerzeile ausgeben
+					$this->Ln(LINEHEIGHT_2); // Zeilenhoehe Scheidungsdatum
+				}
+			}
+			
+			$this->Ln(BOX_PADDING+BOX_MARGIN_Y); // Abstand zwischen Beziehungsdatum und Partner
+			$posY = $this->GetY(); // current Y coordinate
+		}
+
+
+		$this->SetXY($posX,$posY); // indent to current position instead of linestart/pageborder
+	
+
+		// Person ausgeben
+		// RAHMEN --------------------------------------------------------------
+#		if(BOX_BORDER){
+			
+			// draw borders individually (different colors e.g. possible)
+#			$this->Line($posX-BOX_PADDING, $posY-BOX_PADDING, $posX+BOX_PADDING+$width, $posY-BOX_PADDING); // Top
+#			$this->Line($posX-BOX_PADDING, $posY-BOX_PADDING, $posX-BOX_PADDING, $posY+BOX_PADDING+BOX_MAXHEIGHT); // left
+#			$this->Line($posX+BOX_PADDING+$width, $posY-BOX_PADDING, $posX+BOX_PADDING+$width, $posY+BOX_PADDING+BOX_MAXHEIGHT); // right
+#			$this->Line($posX-BOX_PADDING, $posY+BOX_PADDING+BOX_MAXHEIGHT, $posX+BOX_PADDING+$width, $posY+BOX_PADDING+BOX_MAXHEIGHT); // bottom
+			
+			$this->Cell($width+(BOX_PADDING*2), BOX_MAXHEIGHT, '', BOX_BORDER, 1, TEXTALIGN, BOX_BACKGROUND);
+
+			// Padding fuer Inhalt
+			$this->Ln(BOX_PADDING); // vertikales Padding			
+#		}
+		
+		$posX_padding = $posX+BOX_PADDING;
+		$posY_padding = $posY+BOX_PADDING;
+
+
+		// NAME + GESCHLECHT --------------------------------------------------------------
+		// Icon Geschlecht
+		if(SHOW_SEX){
+			if($sex == 'm')
+				// void ImageEps( string $file, [float $x = ''], [float $y = ''], [float $w = 0], [float $h = 0], [mixed $link = ''], [boolean $useBoundingBox = true], [string $align = ''], [string $palign = ''], [mixed $border = 0])
+				$this->ImageEps(PATH_TEMPLATE.IMAGE_MALESEX, $posX_padding+OFFSET_X_MALESEX, $posY_padding+OFFSET_Y_MALESEX, 1.8*1.3, 5.7);
+			else
+				$this->ImageEps(PATH_TEMPLATE.IMAGE_FEMALESEX, $posX_padding+OFFSET_X_FEMALESEX, $posY_padding+OFFSET_Y_FEMALESEX, 1.5*1.3, 5.7);
+		}
+
+		$this->SetFont(FONTFAM_NAMES, '', FONTSIZE_NAMES);	//Schriftauswahl, Schriftgroesse
+
+		// Vorname
+		if(SHOW_FIRSTNAME){
+			$this->SetXY($posX_padding,$posY_padding);
+			
+			// Wenn Name nicht bekannt, Platzhalter zeichnen
+			if($firstname == 'unknown'){
+				$this->SetLineStyle(array('width' => LINESIZE_NAMES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_NAMES, 'color' => array(LINECOLOR_NAMES)));
+				$this->Line($posX_padding, $posY_padding+(LINEHEIGHT_1*0.8), $posX_padding+$width, $posY_padding+(LINEHEIGHT_1*0.8));
+				$this->Ln(LINEHEIGHT_1+LINESPACE_1); //Zeilenhoehe 1 + Abstand 1
+			}else{
+				$this->Cell($width, LINEHEIGHT_1, $firstname, BORDER_NAMES, 1, TEXTALIGN); //Vorname
+				$this->Ln(LINESPACE_1); //Abstand 1
+			}
+
+		}
+		// Nachname
+		if(SHOW_LASTNAME){
+/*
+			if(LINEHEIGHT_1 < FONTSIZE_NAMES){
+				$posY = $this->GetY(); // current Y coordinate
+				$this->SetY($posY-(FONTSIZE_NAMES-LINEHEIGHT_1)); // adjust lineheight
+			}
+*/			
+			$this->SetX($posX_padding); // indent to current position instead of linestart/pageborder
+			
+			// Wenn Name nicht bekannt, Platzhalter zeichnen
+			if($lastname == 'unknown'){
+				$posY = $this->GetY(); // current Y coordinate
+				$this->SetLineStyle(array('width' => LINESIZE_NAMES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_NAMES, 'color' => array(LINECOLOR_NAMES)));
+				$this->Line($posX_padding, $posY+(LINEHEIGHT_1*0.8), $posX_padding+$width, $posY+(LINEHEIGHT_1*0.8));
+				$this->Ln(LINEHEIGHT_1+LINESPACE_2); //Zeilenhoehe 1 + Abstand 2
+			}else{
+				$this->SetFillColor(140,200,250); //Farbe Hintergrund																															 v 0 = transparent, 1 = farbig
+				$this->Cell($width, LINEHEIGHT_1, $lastname, BORDER_NAMES, 1, TEXTALIGN); //Nachname
+				$this->Ln(LINESPACE_2); //Abstand 2
+			}
+			$this->SetFillColor(BOX_BACKGROUND_COLOR_R,BOX_BACKGROUND_COLOR_G,BOX_BACKGROUND_COLOR_B); // Hintergrund farbig
+
+		}
+
+
+		// WEITERE INFOS + DATEN etc.  --------------------------------------------------------------
+		$this->SetFont(FONTFAM_DATES, '', FONTSIZE_DATES);
+
+		// TITEL etc.  --------------------------------------------------------------
+
+			
+		// LEBENSDATEN --------------------------------------------------------------
+		// Geburtsdatum
+		if(SHOW_BIRTHDATE){
+			$posY = $this->GetY(); // current Y coordinate
+			$this->SetXY($posX_padding,$posY);
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_BIRTHDAY, $posX_padding+OFFSET_X_BIRTHDAY, $posY+OFFSET_Y_BIRTHDAY);
+			
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($birthdate == 'unknown'){
+				$this->SetLineStyle(array('width' => LINESIZE_DATES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding+TEXTINDENT_DATES+0.2, $posY+(LINEHEIGHT_2*0.8), $posX_padding+BOX_MINWIDTH, $posY+(LINEHEIGHT_2*0.8));
+				$this->Ln(LINEHEIGHT_2); //Zeilenhoehe 2
+			}else{
+				$this->SetX($posX_padding+TEXTINDENT_DATES); // indent to current position instead of linestart/pageborder
+				$this->Cell($width-TEXTINDENT_DATES, LINEHEIGHT_2, $birthdate, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		
+		// Sterbedatum (falls vorhanden)
+		if(SHOW_DEATHDATE && $deathdate != 'none' && $deathdate != ''){
+			$this->Ln(LINESPACE_1); //Abstand1
+			$posY = $posY + LINEHEIGHT_2 + LINESPACE_1; //Y-Koord verschieben	
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_DEATHDAY, $posX_padding+OFFSET_X_DEATHDAY, $posY+OFFSET_Y_DEATHDAY);
+			
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($deathdate == 'unknown'){
+				$this->SetLineStyle(array('width' => LINESIZE_DATES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding+TEXTINDENT_DATES+0.2, $posY+(LINEHEIGHT_2*0.8), $posX_padding+BOX_MINWIDTH, $posY+(LINEHEIGHT_2*0.8));
+				$this->Ln(LINEHEIGHT_2); //Zeilenhoehe 2
+			}else{
+				$this->SetX($posX_padding+TEXTINDENT_DATES); // indent to current position instead of linestart/pageborder
+				$this->Cell($width-TEXTINDENT_DATES, LINEHEIGHT_2, $deathdate, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		$this->Ln(LINESPACE_2); //Abstand2
+		
+		// Alter
+		if(SHOW_AGE == TRUE && $age != 'none'){
+
+			// Wenn Alter nicht bekannt, Platzhalter zeichnen
+			if(strstr($age, '__')){
+				$posY = $this->GetY(); // current Y coordinate
+				$age = str_replace('__ ', '', $age);
+				$this->SetLineStyle(array('width' => LINESIZE_DATES, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding, $posY+(LINEHEIGHT_2*0.8), $posX_padding+3, $posY+(LINEHEIGHT_2*0.8));
+				$this->SetX($posX_padding+4);
+				$this->Cell($width-4, LINEHEIGHT_2, $age, BORDER_DATES, 1, TEXTALIGN);
+			}else{
+				$this->SetX($posX_padding);
+				$this->Cell($width, LINEHEIGHT_2, $age, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		
+#		$this->Ln(BOX_MARGIN_Y); // vertikales Margin
+	}
+
+	/*
+	function PrintRelDate($posX, $posY, $reltype = 'none', $marriagedate = '__.__.____', $divorcedate = 'none'){
+		$this->SetFont(FONTFAM_DATES, '', FONTSIZE_DATES);
+
+		if(BOX_BORDER){
+			// set border style
+			$this->SetLineWidth(LINESIZE_BOX);
+			$this->SetLineStyle(array('width' => LINESIZE_BOX, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BOX, 'color' => array(LINECOLOR_BOX)));
+			
+			// draw Box
+			$this->SetXY($posX,$posY);
+			$this->SetFillColor(240,200,250); //Farbe Hintergrund																															 v 0 = transparent, 1 = farbig
+			if($divorcedate != 'none' && $divorcedate != '')
+				$this->Cell(BOX_MAXWIDTH+(BOX_PADDING*2), LINEHEIGHT_2+LINESPACE_1+LINEHEIGHT_2+(BOX_PADDING*2), '', BOX_BORDER, 1, TEXTALIGN, 1);
+			else
+				$this->Cell(BOX_MAXWIDTH+(BOX_PADDING*2), LINEHEIGHT_2+(BOX_PADDING*2), '', BOX_BORDER, 1, TEXTALIGN, 1);
+
+			// Add Box Padding
+			$this->SetXY($posX+BOX_PADDING,$posY+BOX_PADDING);
+			$posX = $posX+BOX_PADDING;
+			$posY = $posY+BOX_PADDING;
+		}
+
+		// Heiratsdatum
+		if ($reltype == 'married' || $reltype == 'divorced') {
+#			$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX+0.8, $posY-BOX_MARGIN_Y-LINESPACE_2-LINEHEIGHT_2, '', '', '', 1, '', '', 1);
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX+OFFSET_X_MARRIAGE, $posY+OFFSET_X_MARRIAGE, 2.2*1.3, 3.5);
+		}
+		$this->SetX($posX+TEXTINDENT_DATES); // indent to current position instead of linestart/pageborder
+		$this->Cell(BOX_MAXWIDTH-TEXTINDENT_DATES, LINEHEIGHT_2, $marriagedate, BORDER_DATES, 1, TEXTALIGN);
+		
+		// Scheidungsdatum		
+		$this->SetX($posX);
+		$posY = $posY + LINEHEIGHT_2 + LINESPACE_1; // Y-Koord verschieben	
+		if ($reltype == 'divorced')
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_DIVORCE, $posX+OFFSET_X_DIVORCE, $posY+OFFSET_X_DIVORCE, 2.2*1.3, 3.5);
+		if($divorcedate != 'none' && $divorcedate != ''){
+			$this->SetX($posX+TEXTINDENT_DATES); // indent to current position instead of linestart/pageborder
+			$this->Cell(BOX_MAXWIDTH-TEXTINDENT_DATES, LINEHEIGHT_2, $divorcedate, BORDER_DATES, 1, TEXTALIGN);
+		}
+
+	}
+	*/
+	
+}
+?>

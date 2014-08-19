@@ -1,0 +1,214 @@
+<?php
+//------------------------------------------------------------------
+// Icons
+//------------------------------------------------------------------
+	define('IMAGE_MALESEX','male.ai');
+	define('IMAGE_FEMALESEX','female.ai');
+	define('IMAGE_BIRTHDAY','birth.ai');
+	define('IMAGE_DEATHDAY','death.ai');
+	define('IMAGE_MARRIAGE','marriage.ai');
+	define('IMAGE_DIVORCE','divorce.ai');
+
+
+//------------------------------------------------------------------
+// Offsets, Margins
+//------------------------------------------------------------------
+	//Seitenränder
+	define('MARGIN_HEADER',10);
+	define('MARGIN_TOP',30);
+	define('MARGIN_LEFT',10);
+	define('MARGIN_RIGHT',10);
+	define('MARGIN_BOTTOM',25);
+	define('MARGIN_FOOTER',5);
+
+	// Koordinaten erste Box
+#	define('OFFSET_X_BOX',10);
+#	define('OFFSET_Y_BOX',30);
+
+
+//------------------------------------------------------------------
+// Aussehen Boxen
+//------------------------------------------------------------------
+	// Innenabstand der "Box" festlegen
+	define('BOX_PADDING',2);
+
+	// Aussenabstand der "Box" festlegen
+#	define('BOX_MARGIN',2.5);
+	define('BOX_MARGIN_X',7);
+	define('BOX_MARGIN_Y',3);
+
+
+	
+	// Rahmen ein-/ausschalten bzw. -position
+	define('BOX_BORDER',0); 			// 0 = keine, 1 = alle, TRBL = einzelne/mehrere
+	define('BORDER_NAMES',0); 		// 0 = keine, 1 = alle, TRBL = einzelne/mehrere
+	define('BORDER_DATES',0); 		// 0 = keine, 1 = alle, TRBL = einzelne/mehrere
+	
+	// Rahmenfarbe/-stil
+	define('LINETYPE_BOX',0); 		// 0=solid
+	define('LINESIZE_BOX',0.13);
+	define('LINECOLOR_BOX',0);
+#	define('LINECOLOR_BOX',255);
+	
+	// Hintergrundfuellfarbe festlegen
+	define('BOX_BACKGROUND',0); 	// 0 = transparent, 1 = deckend
+	define('BOX_BACKGROUND_COLOR_R',250);
+	define('BOX_BACKGROUND_COLOR_G',250);
+	define('BOX_BACKGROUND_COLOR_B',250);
+
+//------------------------------------------------------------------
+// Linienstile
+//------------------------------------------------------------------
+	// Namen
+	define('LINESIZE_NAMES',0.13);
+	define('LINETYPE_NAMES',0); // 0=solid
+	define('LINECOLOR_NAMES',0);
+	// Dates
+	define('LINESIZE_DATES',0.13);
+	define('LINETYPE_DATES',0); // 0=solid
+	define('LINECOLOR_DATES',0);
+	// Verwandschaft
+	define('LINESIZE_BLOOD',0.13);
+	define('LINETYPE_BLOOD',0); // 0=solid
+	define('LINECOLOR_BLOOD',0);
+	// Beziehung
+	define('LINESIZE_LOVE',0.23);
+	define('LINETYPE_LOVE','"'.LINESIZE_LOVE / PT_MM * 0.02.','.LINESIZE_LOVE / PT_MM * 1.6.'"'); // =dashed 
+	#define('LINETYPE_LOVE','0.01,0.98'); // =dashed 
+	define('LINECOLOR_LOVE',120);
+
+
+
+//------------------------------------------------------------------
+// Detailabstaende/-versaetze Symbole
+//------------------------------------------------------------------
+	
+	// Symbole Geschlecht (maennlich und weiblich bzw. beide)
+	define('OFFSET_X_SEX',-2.5);
+	define('OFFSET_Y_SEX',0);
+	define('OFFSET_X_MALESEX',-2.8);
+	define('OFFSET_X_FEMALESEX',OFFSET_X_SEX);
+	/*
+  define('OFFSET_X_MALESEX',2.1+0.125+0.071);
+	define('OFFSET_Y_MALESEX',0.6+0.918-0.187);
+	define('OFFSET_X_FEMALESEX',2.1+0.282+0.071);
+	define('OFFSET_Y_MALESEX',0.7+1.548+1.645);
+
+ 	 
+  // Symbole Lebensdaten
+	define('OFFSET_X_DATES',0);
+	define('OFFSET_Y_DATES',0);
+	define('OFFSET_X_BIRTHDAY',0.7+0.195-1.329);
+	#define('OFFSET_Y_BIRTHDAY',11.45);
+	define('OFFSET_Y_BIRTHDAY',0.824+0.45);
+	define('OFFSET_X_DEATHDAY',1.1+0.453-2.129);
+	#define('OFFSET_Y_DEATHDAY',15.15);
+	define('OFFSET_Y_DEATHDAY',0.821+0.45);
+	#define('OFFSET_X_MARRIAGE',OFFSET_X_DATES);
+	define('OFFSET_X_MARRIAGE',1.06+0.071);
+	define('OFFSET_Y_MARRIAGE',7.9+0.713+0.769);
+  define('OFFSET_X_DIVORCE',1.06);
+	define('OFFSET_Y_DIVORCE',7.9+0.713);
+ 	*/
+
+	define('OFFSET_X_DATES',0);
+	define('OFFSET_Y_DATES',0);
+	define('OFFSET_X_BIRTHDAY',0.15);
+	define('OFFSET_Y_BIRTHDAY',0);
+	define('OFFSET_X_DEATHDAY',0.27);
+	define('OFFSET_Y_DEATHDAY',-0.2);
+	define('OFFSET_X_MARRIAGE',-0.2);
+	define('OFFSET_Y_MARRIAGE',0.1);
+  define('OFFSET_X_DIVORCE',-0.2);
+	define('OFFSET_Y_DIVORCE',0.1);
+  
+
+//------------------------------------------------------------------
+// Detailabstaende/-versaetze Linien
+//------------------------------------------------------------------
+
+  // Linien
+	define('LENGTH_VERTLINES',3.5);
+  
+  define('OFFSET_X_VERTLINES',1.5);
+	define('OFFSET_Y_VERTLINES',0);
+	define('OFFSET_X_CHILDLINE',OFFSET_X_VERTLINES);
+#	define('OFFSET_Y_CHILDLINE',2.3);
+	define('OFFSET_Y_CHILDLINE',0);
+	define('OFFSET_X_PARTNERLINE',OFFSET_X_VERTLINES);
+#	define('OFFSET_Y_PARTNERLINE',24);
+	define('OFFSET_Y_PARTNERLINE',0);
+	
+	define('OFFSET_X_RELLINE',2);
+#	define('OFFSET_Y_RELLINE',3.7);
+	define('OFFSET_Y_RELLINE',0);
+	define('RELLINE_MINWIDTH',5);
+	
+
+
+
+//------------------------------------------------------------------
+// Textformatierung und -abstaende
+//------------------------------------------------------------------
+	// Padding um den Text
+	define('CELL_PADDING',0);
+
+
+	// Schriftarten (case insensitive)
+	// default verfügbar: 
+	//	 	Times 		(times,timesb,timesi,timesbi)
+	//		Helvetica (helvetica,helveticab,helveticai,helveticabi)
+	//		Courier 	(courier,courierb,courieri,courierbi) 
+	//		Symbol		(symbol)
+	//		ZapfDingbats (zapfdingbats)
+	// bzw deren Synonyme?: fixed-width, sans serif, serif, symbolic, 
+
+	
+	// Zusätzliche individuelle Schriftarten - Feature in neuer PDF-Klasse noch nicht konfiguriert
+	$custom_fonts = array( 
+		array('courier', 'courier.php')
+	);
+	
+	// Schriftart je Seitenbereich
+	define('FONTFAM_TITLE','helvetica');
+	define('FONTFAM_SUBTITLE','helvetica');
+	define('FONTFAM_NAMES','helvetica');
+	define('FONTFAM_DATES','helvetica');
+	define('FONTFAM_FOOTER','helvetica');
+	
+	// Schriftgröße (pt)
+	define('FONTSIZE_1',13);
+	define('FONTSIZE_2',8);
+	define('FONTSIZE_TITLE',18);
+	define('FONTSIZE_SUBTITLE',9);
+	define('FONTSIZE_NAMES',FONTSIZE_1);
+	define('FONTSIZE_DATES',FONTSIZE_2);
+	define('FONTSIZE_FOOTER',FONTSIZE_2);
+	
+	// Zeilenabstand (mm - von PDF-Klasse standardmaessig auf 120% von FONTSIZE festgelegt - nicht zu aendern)
+	$leading1 = FONTSIZE_1 * K_CELL_HEIGHT_RATIO * PT_MM;
+	$leading2 = FONTSIZE_2 * K_CELL_HEIGHT_RATIO * PT_MM;
+	
+	// Zeilenhoehe (mm)  - dient in ersterlinie zur berechnung der boxhoehe
+	define('LINEHEIGHT_1',$leading1 + 0); // Minimal-Zeilenhoehe + custom wert
+	define('LINEHEIGHT_2',$leading2 + 0); // Minimal-Zeilenhoehe + custom wert
+	// Zeilenzwischenraum (mm)
+	/*
+	define('LINESPACE_1',1.7);
+	define('LINESPACE_2',3);
+	define('LINESPACE_3',6.2);
+	*/
+	define('LINESPACE_1',0);
+	define('LINESPACE_2',0);
+	define('LINESPACE_3',0);
+	// Texteinzug Lebensdaten
+#	define('TEXTINDENT_DATES',2.7);
+	define('TEXTINDENT_DATES',3.1);
+	define('TEXTALIGN','L');
+
+
+	// durchschnittliche Buchstabenbreite
+	define('GLYPH_WIDTH', 1 * PT_MM * 0.48);
+	
+
+?>

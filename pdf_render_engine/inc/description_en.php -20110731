@@ -1,0 +1,13 @@
+<?php
+// Header
+	// Descendants of FIRSTNAME LASTNAME
+	$content_title = 'Descendants of '.$xml->generations->generation->person->firstname->full.' '.$xml->generations->generation->person->lastname->full;
+
+	// XX persons over XX generations in total 
+	$content_stats = $xml->vars->count->people.' persons over '.$xml->vars->count->generations.' generations in total';
+
+
+// Footer
+	// FILENAME.ged MM/DD/YYYY
+	$content_footer = $xml->vars->gedcom->file.' '. date('n/j/Y', strtotime($xml->vars->gedcom->timestamp));
+?>

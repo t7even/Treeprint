@@ -1,0 +1,317 @@
+<?php
+require('tcpdf/tcpdf.php');
+
+class XML2PDF extends TCPDF {
+	
+  public function Header() {
+		global $style, $size;
+		
+		// Titel
+		$this->SetFont($style['font']['title'],'',$size['font']['title']); // Hauptschrift: Schriftauswahl, Schriftgroesse
+		$this->Cell(0, 10, $this->header_title, B, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+
+		// Meta-Info
+		$this->SetFont($style['font']['sub'],'',$size['font']['sub']); // Sekundaerschrift: Schriftauswahl, Schriftgroesse
+		$this->Cell(0, 8, $this->header_string, 0, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+  }
+    
+  public function Footer() {
+		global $style, $size;
+		
+		// Custom text
+		$this->SetY(-13.5);
+    $this->SetFont($style['font']['footer'],'',$size['font']['footer']); // Sekundaerschrift: Schriftauswahl, Schriftgroesse
+		$this->Cell(0, 0, FOOTER_DATA, 0, 1, L); // Rahmengroesse, Inhalt, Rahmenart, Ausrichtung
+    // Pagenumber
+#   $this->Cell(0, 10, 'Page '.$this->getAliasNumPage().'/'.$this->getAliasNbPages(), 0, 0, 'C');
+    //Logo
+    $this->ImageEps(PATH_TEMPLATES.DEFAULT_LOGO, FOOTER_OFFSET_X_LOGO, FOOTER_OFFSET_Y_LOGO, 30, 15);
+  }
+
+
+	function PrintPerson($posX, $posY, $width, $sex = 'm', $firstname = 'unknown', $lastname = 'unknown', $birthdate = 'unknown', $deathdate = 'none', $age = 'none', $partner = TRUE, $reltype = 'none', $marriagedate = 'unknown', $divorcedate = 'none', $gen_divorced = FALSE){  
+		global $style, $size;
+		
+		// oberer Margin
+		$posY += $size['margin']['box']['y']; 		
+
+		// Defaults
+		$this->SetXY($posX,$posY);
+		$posX_padding = $posX+$size['padding']['box'];
+		$posY_padding = $posY+$size['padding']['box'];
+		$this->SetLineWidth($size['line']['box']);
+		$this->SetLineStyle(array('width' => $size['line']['box'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BOX, 'color' => array(LINECOLOR_BOX)));
+
+		// Box-Hintergrund
+		if($style['box']['bg'] == 1)
+			$this->SetFillColorArray($style['box']['color']); // Hintergrund farbig
+			
+		
+		// Wenn Person == 'Partner', Beziehungsdaten ausgeben (inkl ggf. Symbole)
+		if($partner){
+			
+#			if(BOX_BORDER){
+
+				// Wenn geschieden, Beziehungs-Box doppelt so groß zeichnen, sonst normal
+				if($divorcedate != 'none' && $divorcedate != '')
+#					$this->Cell($size['box']['min_width']+($size['padding']['box']*2), $size['leading'][2]+$size['linespace'][1]+$size['leading'][2]+($size['padding']['box']*2), '', BOX_BORDER, 1, TEXTALIGN, $style['box']['bg']);
+					$this->Cell($size['box']['min_width']+($size['padding']['box']*2), ($size['leading'][2]*2)+($size['padding']['box']*2), '', BOX_BORDER, 1, TEXTALIGN, $style['box']['bg']);
+				else
+					$this->Cell($size['box']['min_width']+($size['padding']['box']*2), $size['leading'][2]+($size['padding']['box']*2), '', BOX_BORDER, 1, TEXTALIGN, $style['box']['bg']);
+  	
+				// Padding fuer Inhalt
+				$this->SetXY($posX_padding,$posY_padding);
+#			}
+  	
+			// Heiratsdatum
+			if ($reltype == 'married' || $reltype == 'divorced') {
+#				$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX_padding+OFFSET_X_MARRIAGE, $posY_padding+OFFSET_Y_MARRIAGE, 2.2*1.3, 3.5);
+
+				$this->SetXY($posX_padding+OFFSET_X_MARRIAGE, $posY_padding+OFFSET_Y_MARRIAGE); // Versatz fuer Zeichen
+				$this->Write($size['leading'][2], '⚭'); // Zeichen verheiratet
+
+				$posX_indent = $posX_padding+$size['indent']['dates'];
+			}else{
+				$posX_indent = $posX_padding;
+			}
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($marriagedate == 'unknown'){
+				$this->SetLineStyle(array('width' => $size['line']['dates'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_indent+0.2, $posY_padding+($size['leading'][2]*0.8), $posX_padding+$size['box']['min_width'], $posY_padding+($size['leading'][2]*0.8));
+				$this->Ln($size['leading'][2]); //Zeilenhoehe 2
+			}else{
+#				$this->SetX($posX_indent); // indent to current position instead of linestart/pageborder
+				$this->SetXY($posX_indent, $posY_padding);
+				$this->Cell($size['box']['min_width']-$size['indent']['dates'], $size['leading'][2], $marriagedate, BORDER_DATES, 1, TEXTALIGN);
+			}
+			
+			// Wenn Scheidung in Generation vorhanden
+			if($gen_divorced == TRUE){
+				if(($reltype == 'divorced') || ($divorcedate != 'none' && $divorcedate != '')){
+					// Wenn aktuelle Person geschieden, Datum mit Symbol ausgeben
+					if ($reltype == 'divorced'){
+						$posY = $this->GetY(); // current Y coordinate
+#						$this->ImageEps(PATH_TEMPLATE.IMAGE_DIVORCE, $posX_padding+OFFSET_X_DIVORCE, $posY+OFFSET_Y_DIVORCE, 2.2*1.3, 3.5);
+
+						$this->SetXY($posX_padding+OFFSET_X_DIVORCE, $posY+OFFSET_Y_DIVORCE);
+						$this->Write($size['leading'][2], '⚮'); // Zeichen geschieden
+					}
+					if($divorcedate != 'none' && $divorcedate != ''){
+						// Wenn Datum nicht bekannt, Platzhalter zeichnen
+						if($divorcedate == '__.__.____'){
+							$this->SetLineStyle(array('width' => $size['line']['dates'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+							$this->Line($posX_indent+0.2, $posY+($size['leading'][2]*0.8), $posX_padding+$size['box']['min_width'], $posY+($size['leading'][2]*0.8));
+							$this->Ln($size['leading'][2]); //Zeilenhoehe 2
+						}else{
+							$this->SetX($posX_indent); // indent to current position instead of linestart/pageborder
+							$this->Cell($size['box']['min_width']-$size['indent']['dates'], $size['leading'][2], $divorcedate, BORDER_DATES, 1, TEXTALIGN);
+						}
+					}
+				
+				}else{
+					// Sonst hier nur Leerzeile ausgeben
+					$this->Ln($size['leading'][2]); // Zeilenhoehe Scheidungsdatum
+				}
+			}
+			
+			$this->Ln($size['padding']['box']+$size['margin']['box']['y']); // Abstand zwischen Beziehungsdatum und Partner
+			$posY = $this->GetY(); // current Y coordinate
+		}
+
+
+		$this->SetXY($posX,$posY); // indent to current position instead of linestart/pageborder
+	
+
+		// Person ausgeben
+		// RAHMEN --------------------------------------------------------------
+#		if(BOX_BORDER){
+			
+			// draw borders individually (different colors e.g. possible)
+#			$this->Line($posX-$size['padding']['box'], $posY-$size['padding']['box'], $posX+$size['padding']['box']+$width, $posY-$size['padding']['box']); // Top
+#			$this->Line($posX-$size['padding']['box'], $posY-$size['padding']['box'], $posX-$size['padding']['box'], $posY+$size['padding']['box']+$size['box']['max_height']); // left
+#			$this->Line($posX+$size['padding']['box']+$width, $posY-$size['padding']['box'], $posX+$size['padding']['box']+$width, $posY+$size['padding']['box']+$size['box']['max_height']); // right
+#			$this->Line($posX-$size['padding']['box'], $posY+$size['padding']['box']+$size['box']['max_height'], $posX+$size['padding']['box']+$width, $posY+$size['padding']['box']+$size['box']['max_height']); // bottom
+			
+			$this->Cell($width+($size['padding']['box']*2), $size['box']['max_height'], '', BOX_BORDER, 1, TEXTALIGN, $style['box']['bg']);
+
+			// Padding fuer Inhalt
+			$this->Ln($size['padding']['box']); // vertikales Padding			
+#		}
+		
+		$posX_padding = $posX+$size['padding']['box'];
+		$posY_padding = $posY+$size['padding']['box'];
+
+
+		// NAME + GESCHLECHT --------------------------------------------------------------
+		// Icon Geschlecht
+		$this->SetFont($style['font']['names'], '', $size['font']['names']);	//Schriftauswahl, Schriftgroesse
+
+		if(SHOW_SEX){
+			if($sex == 'm'){
+				$this->SetXY($posX_padding+OFFSET_X_MALESEX, $posY_padding+OFFSET_Y_SEX);
+				// void ImageEps( string $file, [float $x = ''], [float $y = ''], [float $w = 0], [float $h = 0], [mixed $link = ''], [boolean $useBoundingBox = true], [string $align = ''], [string $palign = ''], [mixed $border = 0])
+#				$this->ImageEps(PATH_TEMPLATE.IMAGE_MALESEX, $posX_padding+OFFSET_X_MALESEX, $posY_padding+OFFSET_Y_MALESEX, 1.8*1.3, 5.7);
+				$this->Write($size['leading'][1], '♂'); // Zeichen maennlich
+			}else{
+				$this->SetXY($posX_padding+OFFSET_X_FEMALESEX, $posY_padding+OFFSET_Y_SEX);
+#				$this->ImageEps(PATH_TEMPLATE.IMAGE_FEMALESEX, $posX_padding+OFFSET_X_FEMALESEX, $posY_padding+OFFSET_Y_FEMALESEX, 1.5*1.3, 5.7);
+				$this->Write($size['leading'][1], '♀'); // Zeichen weiblich
+			}
+		}
+
+
+		// Vorname
+		if(SHOW_FIRSTNAME){
+			$this->SetXY($posX_padding,$posY_padding);
+			
+			// Wenn Name nicht bekannt, Platzhalter zeichnen
+			if($firstname == 'unknown'){
+				$this->SetLineStyle(array('width' => $size['line']['names'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_NAMES, 'color' => array(LINECOLOR_NAMES)));
+				$this->Line($posX_padding, $posY_padding+($size['leading'][1]*0.8), $posX_padding+$width, $posY_padding+($size['leading'][1]*0.8));
+#				$this->Ln($size['leading'][1]+$size['linespace'][1]); //Zeilenhoehe 1 + Abstand 1
+				$this->Ln($size['leading'][1]); //Zeilenhoehe 1
+			}else{
+				$this->Cell($width, $size['leading'][1], $firstname, BORDER_NAMES, 1, TEXTALIGN); //Vorname
+#				$this->Ln($size['linespace'][1]); //Abstand 1
+			}
+
+		}
+		// Nachname
+		if(SHOW_LASTNAME){
+/*
+			if($size['leading'][1] < $size['font']['names']){
+				$posY = $this->GetY(); // current Y coordinate
+				$this->SetY($posY-($size['font']['names']-$size['leading'][1])); // adjust lineheight
+			}
+*/			
+			$this->SetX($posX_padding); // indent to current position instead of linestart/pageborder
+			
+			// Wenn Name nicht bekannt, Platzhalter zeichnen
+			if($lastname == 'unknown'){
+				$posY = $this->GetY(); // current Y coordinate
+				$this->SetLineStyle(array('width' => $size['line']['names'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_NAMES, 'color' => array(LINECOLOR_NAMES)));
+				$this->Line($posX_padding, $posY+($size['leading'][1]*0.8), $posX_padding+$width, $posY+($size['leading'][1]*0.8));
+				$this->Ln($size['leading'][1]+$size['linespace'][1]); //Zeilenhoehe 1 + Abstand 1
+			}else{
+				$this->SetFillColor(140,200,250); //Farbe Hintergrund																															 v 0 = transparent, 1 = farbig
+				$this->Cell($width, $size['leading'][1], $lastname, BORDER_NAMES, 1, TEXTALIGN); //Nachname
+				$this->Ln($size['linespace'][1]); //Abstand 1
+			}
+			$this->SetFillColorArray($style['box']['color']); // Hintergrund farbig
+
+		}
+
+
+		// WEITERE INFOS + DATEN etc.  --------------------------------------------------------------
+		$this->SetFont($style['font']['dates'], '', $size['font']['dates']);
+
+		// TITEL etc.  --------------------------------------------------------------
+
+			
+		// LEBENSDATEN --------------------------------------------------------------
+		// Geburtsdatum
+		if(SHOW_BIRTHDATE){
+			$posY = $this->GetY(); // current Y coordinate
+			$this->SetXY($posX_padding+OFFSET_X_BIRTHDAY,$posY+OFFSET_Y_BIRTHDAY);
+#			$this->ImageEps(PATH_TEMPLATE.IMAGE_BIRTHDAY, $posX_padding+OFFSET_X_BIRTHDAY, $posY+OFFSET_Y_BIRTHDAY);
+			$this->Write($size['leading'][2], '⁎'); // Zeichen geboren
+			
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($birthdate == 'unknown'){
+				$this->SetLineStyle(array('width' => $size['line']['dates'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding+$size['indent']['dates']+0.2, $posY+($size['leading'][2]*0.8), $posX_padding+$size['box']['min_width'], $posY+($size['leading'][2]*0.8));
+				$this->Ln($size['leading'][2]); //Zeilenhoehe 2
+			}else{
+				$this->SetX($posX_padding+$size['indent']['dates']); // indent to current position instead of linestart/pageborder
+				$this->Cell($width-$size['indent']['dates'], $size['leading'][2], $birthdate, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		
+		// Sterbedatum (falls vorhanden)
+		if(SHOW_DEATHDATE && $deathdate != 'none' && $deathdate != ''){
+#			$this->Ln($size['linespace'][1]); //Abstand1
+#			$posY = $posY + $size['leading'][2] + $size['linespace'][1]; //Y-Koord verschieben	
+#			$this->ImageEps(PATH_TEMPLATE.IMAGE_DEATHDAY, $posX_padding+OFFSET_X_DEATHDAY, $posY+OFFSET_Y_DEATHDAY);
+
+			$posY = $this->GetY(); // current Y coordinate
+			$this->SetXY($posX_padding+OFFSET_X_DEATHDAY,$posY+OFFSET_Y_DEATHDAY);
+			$this->Write($size['leading'][2], '✝'); // Zeichen geboren
+			
+			// Wenn Datum nicht bekannt, Platzhalter zeichnen
+			if($deathdate == 'unknown'){
+				$this->SetLineStyle(array('width' => $size['line']['dates'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding+$size['indent']['dates']+0.2, $posY+($size['leading'][2]*0.8), $posX_padding+$size['box']['min_width'], $posY+($size['leading'][2]*0.8));
+				$this->Ln($size['leading'][2]); //Zeilenhoehe 2
+			}else{
+				$this->SetX($posX_padding+$size['indent']['dates']); // indent to current position instead of linestart/pageborder
+				$this->Cell($width-$size['indent']['dates'], $size['leading'][2], $deathdate, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		$this->Ln($size['linespace'][2]); //Abstand 2
+		
+		// Alter
+		if(SHOW_AGE == TRUE && $age != 'none'){
+
+			// Wenn Alter nicht bekannt, Platzhalter zeichnen
+			if(strstr($age, '__')){
+				$posY = $this->GetY(); // current Y coordinate
+				$age = str_replace('__ ', '', $age);
+				$this->SetLineStyle(array('width' => $size['line']['dates'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_DATES, 'color' => array(LINECOLOR_DATES)));
+				$this->Line($posX_padding, $posY+($size['leading'][2]*0.8), $posX_padding+3, $posY+($size['leading'][2]*0.8));
+				$this->SetX($posX_padding+4);
+				$this->Cell($width-4, $size['leading'][2], $age, BORDER_DATES, 1, TEXTALIGN);
+			}else{
+				$this->SetX($posX_padding);
+				$this->Cell($width, $size['leading'][2], $age, BORDER_DATES, 1, TEXTALIGN);
+			}
+		}
+		
+#		$this->Ln($size['margin']['box']['y']); // vertikales Margin
+	}
+
+	/*
+	function PrintRelDate($posX, $posY, $reltype = 'none', $marriagedate = '__.__.____', $divorcedate = 'none'){
+		$this->SetFont($style['font']['dates'], '', $size['font']['dates']);
+
+		if(BOX_BORDER){
+			// set border style
+			$this->SetLineWidth($size['line']['box']);
+			$this->SetLineStyle(array('width' => $size['line']['box'], 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BOX, 'color' => array(LINECOLOR_BOX)));
+			
+			// draw Box
+			$this->SetXY($posX,$posY);
+			$this->SetFillColor(240,200,250); //Farbe Hintergrund																															 v 0 = transparent, 1 = farbig
+			if($divorcedate != 'none' && $divorcedate != '')
+				$this->Cell(BOX_MAXWIDTH+($size['padding']['box']*2), $size['leading'][2]+$size['linespace'][1]+$size['leading'][2]+($size['padding']['box']*2), '', BOX_BORDER, 1, TEXTALIGN, 1);
+			else
+				$this->Cell(BOX_MAXWIDTH+($size['padding']['box']*2), $size['leading'][2]+($size['padding']['box']*2), '', BOX_BORDER, 1, TEXTALIGN, 1);
+
+			// Add Box Padding
+			$this->SetXY($posX+$size['padding']['box'],$posY+$size['padding']['box']);
+			$posX = $posX+$size['padding']['box'];
+			$posY = $posY+$size['padding']['box'];
+		}
+
+		// Heiratsdatum
+		if ($reltype == 'married' || $reltype == 'divorced') {
+#			$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX+0.8, $posY-$size['margin']['box']['y']-$size['linespace'][2]-$size['leading'][2], '', '', '', 1, '', '', 1);
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_MARRIAGE, $posX+OFFSET_X_MARRIAGE, $posY+OFFSET_X_MARRIAGE, 2.2*1.3, 3.5);
+		}
+		$this->SetX($posX+$size['indent']['dates']); // indent to current position instead of linestart/pageborder
+		$this->Cell(BOX_MAXWIDTH-$size['indent']['dates'], $size['leading'][2], $marriagedate, BORDER_DATES, 1, TEXTALIGN);
+		
+		// Scheidungsdatum		
+		$this->SetX($posX);
+		$posY = $posY + $size['leading'][2] + $size['linespace'][1]; // Y-Koord verschieben	
+		if ($reltype == 'divorced')
+			$this->ImageEps(PATH_TEMPLATE.IMAGE_DIVORCE, $posX+OFFSET_X_DIVORCE, $posY+OFFSET_X_DIVORCE, 2.2*1.3, 3.5);
+		if($divorcedate != 'none' && $divorcedate != ''){
+			$this->SetX($posX+$size['indent']['dates']); // indent to current position instead of linestart/pageborder
+			$this->Cell(BOX_MAXWIDTH-$size['indent']['dates'], $size['leading'][2], $divorcedate, BORDER_DATES, 1, TEXTALIGN);
+		}
+
+	}
+	*/
+	
+}
+?>

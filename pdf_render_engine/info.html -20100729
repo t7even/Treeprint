@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="de" lang="de">
+<head>
+	<title>xml2pdf - Info, Status</title>
+	<meta name="robots" content="noindex,nofollow" />
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+	<meta http-equiv="content-language" content="de" />
+	<meta http-equiv="imagetoolbar" content="no" />
+
+	<style type="Text/css">
+		body{
+			font:normal 0.9em 'Calibri';
+			margin:0 10%;
+		}
+		h1,h2,h3,h4{
+			padding-bottom:5px;
+			border-bottom:1px solid #ddd;
+			margin:25px 0 5px;
+		}
+		hr{
+			border:none;
+			border-top:1px solid #ddd;
+			border-bottom:1px solid #eee;
+			margin:35px -25px;
+		}
+	</style>
+</head>
+<body>
+	<h1>xml2pdf - Info, Status</h1>
+	
+	<h3>Aktueller Stand</h3>
+	<h4>Links</h4>
+	<ul>
+		<li><a href="http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php">http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php</a> (mit Dummy-Daten)</li>
+		<li><a href="http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php?src=ibenthaler.xml">http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php?src=ibenthaler.xml</a> (derzeit noch unskaliert - daher fehlerhaft)</li>
+		<li><a href="http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php?src=andreas_schmidt.xml">http://dev.t7even.com/treeprint/pdf_render_engine/xml2pdf.php?src=andreas_schmidt.xml</a></li>
+	</ul>
+		 
+	<h4>Optionale Vars</h4>
+	<p><code title='titel + footer englisch'>&amp;lang=en</code>, <code title='linksbündig'>&amp;align=left</code>, <code title='gibt arrays aus'>&amp;dev=1</code>, <code title='direkt-download'>&amp;save=1</code></p>
+
+	<hr/>
+
+	<h3>Aktuelle ToDos</h3>
+	<h4>Layout</h4>
+	<input type="checkbox" checked="checked" /> Personen genau mittig platzieren<br/>
+	<input type="checkbox" checked="checked" /> kein Indent bei Unverheirateten<br/>
+	<input type="checkbox" /> Korrektur bei langen Elternnamen (Garcia)<br/>
+	
+	<h4>Engine</h4>
+	<input type="checkbox" checked="checked" /> Kanibalisierung Padding_X / Margin_X<br/>
+	<input type="checkbox" checked="checked" /> Länge Namen korrekt ermitteln (Vor- vs. Nachn.)<br/>
+	<input type="checkbox" checked="checked" /> unbekannte Namen, Daten aus XML übergeben<br/>
+	<input type="checkbox" checked="checked" /> Scaling<br/>
+	<input type="checkbox" /> Symbols als Text aufnehmen<br/>
+	<input type="checkbox" /> Namenberechnung: Sonderzeichen checken<br/>
+	<input type="checkbox" /> Theme mit Myriad/Meta o. anderen Fonts<br/>
+		
+	<span style="font-size:3em">	<br/><br/><br/> &#x2640; &#x2642; &#x26a5; &#x26a7; &#x26a6; <br/>
+			* - &#x002A; &#x066D;  &#x2729; &#x2605; &#x1695; &#x2605; &#x204E; &#x2217; &#x2606; &#x2736; <br/>
+			+ - &#x2020; &#x271D; &#x2670; &#x2671; &#x26b0; &#x26b1; &#x2694; &#x2670; &#x2671; &#x2626; &#x2694; <br/>
+			oo - &#x26AD; &#x26AE; &#x26AF; <br/>
+			# - &#x2721; &#x262A; &#x2626; <br/>
+	</span>
+
+	<h4>Konfiguration</h4>
+	<input type="checkbox" checked="checked" /> Language-Files korrigiert<br/>
+	
+	<h4>Optionales</h4>
+	<input type="checkbox" /> weniger Zeilenabstand zwischen Vor- u Nachnamen<br/>
+	<input type="checkbox" /> zus. Margin zwischen Familien<br/>
+	
+	<h3>Next Steps</h3>
+	<ol>
+		<li>Vorfahrenmodus PDF-Engine</li>
+		<li>Anbindung an ged2xml</li>
+		<li>Anbindung an Frontend</li>
+	</ol>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<?php
+// minimale Druckbogengroesse (A5)
+	$page_minwidth	= 210; 
+	$page_minheight	= 145; 
+
+// maximale Druckbogengroesse (mehr nicht möglich. oder?)
+	$page_maxwidth	= 5080; 
+	$page_maxheight	= 5080; 
+
+
+//------------------------------------------------------------------
+// Seitenlaengen anhand XML berechnen
+//------------------------------------------------------------------
+
+#	$file_widthy	= (($xml->vars->count->columns));
+#	$file_width = 275;
+	// Dateibreite= margin links*2    Boxbreite+Zwischenraum    *Anzahl Spalten     -1 Zwischenraum
+#	$file_width	= ((OFFSET_X_BOX*2)+((BOX_MAXWIDTH+BOX_MARGIN_X)*$xml->vars->count->columns));
+	$file_width = $family_maxwidth;
+
+#	$file_height = (($xml->vars->count->generations));
+#	$file_height = 145;
+	// Dateihoehe = margintop+halber margintop          Boxhoehe + Linienhoehe*2          +4 Zwischenraeume       *Anzahl Zeilen         
+	$file_height = ((OFFSET_Y_BOX+(OFFSET_Y_BOX/2))+((((BOX_MAXHEIGHT+LENGTH_VERTLINES)*2)+(BOX_MARGIN_Y*4)+(LINEHEIGHT_2+(BOX_PADDING+BOX_MARGIN_Y*2)))*$xml->vars->count->generations));
+	// + 15% Puffer
+	$file_height = $file_height*1.05;
+	
+//------------------------------------------------------------------
+// Wenn Laenge oder Breite groesser als der maximale Druckbogen ist, wird der spez. Faktor berechnet (default = 1)
+//------------------------------------------------------------------
+	// Skalierungsfaktor  
+	$scaling = 1;
+	// Wenn XML-Inhalt zu groß für max. Druckbogengroesse
+	if($file_width > $page_maxwidth || $file_height > $page_maxheight) {		
+		// Skalierungsfaktoren berechnen (jede Seite)
+		$scalingX = ($file_width > $page_maxwidth ? $page_maxwidth/$file_width : $scaling);
+		$scalingY = ($file_height > $page_maxheight ? $page_maxheight/$file_height : $scaling);
+		// Pruefung, welcher Faktor staerker ist
+		$scaling = ($scalingX < $scalingY ? $scalingX : $scalingY);
+	}
+	
+	// Seitenlaengen
+	$page_width	= $file_width * $scaling;
+	$page_height = $file_height * $scaling;
+
+	
+	// Wenn XML-Inhalt kürzer oder schmäler als A5-Breite/-Höhe
+	if($file_width < $page_minwidth)
+		$page_width	= $page_minwidth;
+	if($file_height < $page_minheight)
+		$page_height = $page_minheight;
+
+	/*
+	// DEBUG ---------------------------
+	echo $file_width.'<br>';
+	echo $file_height.'<br>';
+	echo $page_width.'<br>';
+	echo $page_height.'<br>';
+	echo $scaling.'<br>';
+	exit;
+	*/
+?>

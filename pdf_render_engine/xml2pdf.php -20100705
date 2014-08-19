@@ -1,0 +1,618 @@
+<?php
+	header('Content-type: text/html; charset=utf-8');
+
+	$time0 = microtime(true);
+	$memory0 = memory_get_usage();
+
+//------------------------------------------------------------------
+// Pfade und Standardwerte uebernehmen | ohne daten mit fehlermeldung abbrechen
+//------------------------------------------------------------------
+	if(!include('inc/config.php')) exit('no config-data');
+
+	// Funktionen
+	include('inc/array_functions.php');
+
+	// PDF-Klasse sowie custom PDF-Funktionen
+	require_once('tcpdf/config/lang/eng.php');
+	require_once('inc/pdf_functions.php');
+
+	// Style / Template
+	include(PATH_TEMPLATE.'/style.php');
+
+	// Switch fuer XML-Quelle
+	if(!$_GET['src'])
+		$xml_src = DEFAULT_SRC;
+	else
+		$xml_src = 'src/'.$_GET['src'];
+
+	// Anzeige Vornamen
+	$name_display = $a_name_lengths[0];
+	$default_date = DEFAULT_DATE;
+
+	// Maximalhoehe der "Box" aus Bestandteilen errechnen
+ 	if(SHOW_FIRSTNAME)
+ 		$calc_boxheight = LINEHEIGHT_1;
+	if(SHOW_LASTNAME)
+ 		$calc_boxheight = $calc_boxheight+LINESPACE_1+LINEHEIGHT_1;
+	if(SHOW_TITLE)
+ 		$calc_boxheight = $calc_boxheight+LINESPACE_1+LINEHEIGHT_2;
+	if(SHOW_BIRTHDATE)
+ 		$calc_boxheight = $calc_boxheight+LINESPACE_2+LINEHEIGHT_2;
+	if(SHOW_DEATHDATE)
+ 		$calc_boxheight = $calc_boxheight+LINESPACE_1+LINEHEIGHT_2;
+	if(SHOW_AGE)
+ 		$calc_boxheight = $calc_boxheight+LINESPACE_2+LINEHEIGHT_2;
+
+	define('BOX_MAXHEIGHT',$calc_boxheight+(BOX_PADDING*2));
+	define('BOX_HEIGHT_RELDATE',LINEHEIGHT_2+(BOX_PADDING*2));
+
+
+
+
+	$time1 = microtime(true);
+	$memory1 = memory_get_usage();
+
+//------------------------------------------------------------------
+// XML laden
+//------------------------------------------------------------------
+	if ($xml = simplexml_load_file($xml_src)) {
+		if ($xml->generations[type] == 'a') exit('vorfahren-modus noch nicht implementiert');
+
+		$time2 = microtime(true);
+		$memory2 = memory_get_usage();
+
+
+		//------------------------------------------------------------------
+		// Content aufbauen
+		//------------------------------------------------------------------
+
+		// Arrays definieren
+		$generation = array();
+		$people = array();
+		$info = array();
+
+
+//------------------------------------------------------------------
+// 1. Durchlauf:
+// XML durchgehen und Infos in 2. Array schreiben
+//------------------------------------------------------------------
+
+		//------------------------------------------------------------------
+		// Aktuelle Generation (jeweils neue Zeile)
+		//------------------------------------------------------------------
+		foreach ($xml->generations->generation as $xml_generation) {
+
+			// Scheidungsvariable: default = keine
+			$generation[(int)$xml_generation['level']] = array(
+				'divorce' => 'none'
+			);
+
+			// Zaehler ruecksetzen
+			$x_pos = 0;
+			$i_person = 0;
+
+
+			//------------------------------------------------------------------
+			// Einzelne Personen
+			//------------------------------------------------------------------
+			foreach ($xml_generation->person as $xml_person) {
+
+				// Personenbreite = Laenge Vorname (bzw. Laenge Nachanme wenn laenger) aber mindestens wie BOX_MINWIDTH
+				$width_firstname = calcStrLength((string)$xml_person->firstname->default, 1.3);
+				$width_lastname = calcStrLength((string)$xml_person->lastname->default, 1.3);
+				$width_person = ( $width_lastname > $width_firstname ) ? $width_lastname : $width_firstname;
+				if($width_person < BOX_MINWIDTH) $width_person = BOX_MINWIDTH;
+
+
+				// Unique ID von Mutter/Vater suchen (nicht bei allererster Person)
+				if( (int)$xml_person['parent_id'] && (int)$xml_generation['level'] >= 1 )
+					$parent_uid = search_parent( (int)$xml_person['parent_id'], (int)$xml_generation['level'], (int)$xml_person['pos'], $people);
+
+
+				// X-Position ueberpruefen und ggf. an Eltern anpassen
+				if($x_pos < $people[ (string)$parent_uid ]['x_pos'])
+					$x_pos = $people[ (string)$parent_uid ]['x_pos'];
+
+				$people[ (string)$xml_person['uid'] ] = array(
+					'x_pos' => $x_pos,	// individuelle Startposition
+					'parent_id' => (int)$xml_person['parent_id'], 										// Übergerdnete Person
+					'parent_uid' => (string)$parent_uid,															// Übergerdnete Person (Unique ID)
+
+					'fname' => (string)$xml_person->firstname->default,
+#					'width_fname' => (int)$xml_person->firstname->default['length'],	// Laenge Vornamen
+					'lname' => (string)$xml_person->lastname->default,
+#					'width_lname' => (int)$xml_person->lastname->default['length'],  	// Laenge Nachnamen
+					'width_person' => $width_person, 																	// Groesse Platzhalter merken
+					'width_family' => 0, 																							// fuer spaetere Berechnung der Laenge aller Namen im nachfolgenden Zweig
+
+					'descendants' => (int)$xml_person['width'], 											// Anzahl/Breite nachfolgende Personen im Zweig
+
+					'position' => (int)$xml_person['pos'], 														// Wievielte Person in Zeile
+					'id_in_gen' => (int)$i_person																			// Wievielte Person in Generation
+				);
+
+
+
+// Testing -----------------------------------
+#				if( (int)$xml_person['id'] == 46 || (int)$xml_person['id'] == 17)
+#					$people[(int)$xml_person['id']]['x_pos_1'] = $x_pos;
+
+
+				// Partnergeneration
+				if( ($xml_generation['level'] %2) != 0 ){
+					// UID des Partners suchen
+					$partner_uid = search_parent( (int)$xml_person->relation['partner_id'], (int)$xml_generation['level'], (int)$xml_person['pos'], $people);  // Partner (Unique ID)
+
+					// ID + UID des Partners merken
+					$people[ (string)$xml_person['uid'] ]['partner_id'] = (int)$xml_person->relation['partner_id'];
+					$people[ (string)$xml_person['uid'] ]['partner_uid'] = $partner_uid;
+
+					// Rel-Counter des Partner erhoehen
+					$people[ (string)$partner_uid ]['relations']++;
+
+					// Nummer der Beziehung merken
+					$people[ (string)$xml_person['uid'] ]['relation_nr'] = $people[ (string)$partner_uid ]['relations'];
+				}
+
+
+				// Personenbreite zu horiz Positionierungs-Koordinate addieren
+				$x_pos += $width_person;
+				$i_person++;
+
+
+				// Scheidung ggf. in Mutterarray generation merken
+				if($xml_person->relation->type == divorced)
+					$generation[(int)$xml_generation['level']]['divorce'] = 'true';
+
+				// alternative Syntax fuer Scheidungen
+#				$divorced = array(23,56,4324,4326,usw.)
+#				$divorced[] = $person["id"];
+#				if(in_array($person["id"],$divorced)) do something;
+
+
+			}
+			//------------------------------------------------------------------
+			// Ende Person
+			//------------------------------------------------------------------
+
+
+		}
+		//------------------------------------------------------------------
+		// Ende Generation
+		//------------------------------------------------------------------
+
+
+		$time3 = microtime(true);
+		$memory3 = memory_get_usage();
+
+
+//------------------------------------------------------------------
+// 2. Durchlauf:
+// Familienbreiten berechnen
+//------------------------------------------------------------------
+
+		// Array umkehren, Schluessel erhalten
+		$people = array_reverse($people, true);
+
+		// Familienbreiten berechnen
+		foreach($people as $k => $v){
+			$parent_id = $people[$k]['parent_uid'];
+
+			// Wenn aktuelle Familienbreite kleiner als aktuelle Personenbreite
+			// Familienbreite immer mindestens so breit wie Person selbst setzen
+			if($people[$k]['width_family'] < $people[$k]['width_person'])
+				$people[$k]['width_family'] = $people[$k]['width_person'];
+
+			// Eltern-Familienbreite um aktuelle Familienbreite erweitern
+			$people[$parent_id]['width_family'] += $people[$k]['width_family'];
+		}
+
+
+//------------------------------------------------------------------
+// 3. Durchlauf:
+// Familienbreiten berechnen
+//------------------------------------------------------------------
+
+		// Array erneut umkehren, Schluessel erhalten
+		$people = array_reverse($people, true);
+		$x_pos = 0;
+
+		foreach($people as $k => $v){
+			// X-Position je Generation zuruecksetzen
+			if($people[$k]['id_in_gen'] == 0)
+				$x_pos = 0;
+
+			// X-Position ueberpruefen und ggf. an Vorgaenger anpassen
+			if($people[$k]['x_pos'] < $x_pos)
+				$people[$k]['x_pos'] = $x_pos;
+
+// Testing -----------------------------------
+#				if($k == 46 || $k == 17)
+#					$people[$k]['x_pos_2'] = $x_pos;
+
+			$parent_id = $people[$k]['parent_uid'];
+
+			// X-Position ueberpruefen und ggf. an Eltern anpassen
+			if($people[$k]['x_pos'] < $people[$parent_id]['x_pos'])
+				$people[$k]['x_pos'] = $people[$parent_id]['x_pos'];
+
+// Testing -----------------------------------
+#				if($k == 46 || $k == 17)
+#					$people[$k]['x_pos_3'] = $x_pos;
+
+			// X-Pos fuer naechsten Durchlauf
+			$x_pos = $people[$k]['x_pos']+$people[$k]['width_family'];
+		}
+
+		if($_GET[dev]){
+			$time4 = microtime(true);
+			$memory4= memory_get_usage();
+
+
+			$time5 = microtime(true);
+			$memory5 = memory_get_usage();
+
+			// Arrays ausgeben
+			print '<pre>';
+			print_r($generation);
+			print_r($people);
+			print '</pre>';
+
+
+			$time6 = microtime(true);
+			$memory6 = memory_get_usage();
+
+			// Zeitmessung
+			print '<h4>Zeit</h4>';
+			print '<p>';
+			print 'Includes einlesen: '.round(($time1 - $time0),3).' s.<br/>';
+			print 'XML aufrufen: 			'.round(($time2 - $time1),3).' s.<br/>';
+			print 'XML verarbeiten: 	'.round(($time3 - $time2),3).' s.<br/>';
+			print 'Breiten berechnen: '.round(($time4 - $time3),3).' s.<br/>';
+			print 'Array wieder umdrehen: '.round(($time5 - $time4),3).' s.<br/>';
+			print 'Arrays ausgeben: 	'.round(($time6 - $time5),3).' s.';
+			print '</p>';
+
+			$time = microtime(true) - $time0;
+			print '<p>Gesamt:'.round($time,3).' s.</p>';
+
+
+			// Speichermessung
+			print '<h4>Speicher</h4>';
+			print '<p>';
+			print 'Includes einlesen: 		'.round(($memory1 / 1024 / 1024),3).' MB<br/>';
+			print 'XML aufrufen: 					'.round(($memory2 / 1024 / 1024),3).' MB<br/>';
+			print 'XML verarbeiten: 			'.round(($memory3 / 1024 / 1024),3).' MB<br/>';
+			print 'Breiten berechnen:			'.round(($memory4 / 1024 / 1024),3).' MB<br/>';
+			print 'Array wieder umdrehen: '.round(($memory5 / 1024 / 1024),3).' MB<br/>';
+			print 'Arrays ausgeben:			 	'.round(($memory6 / 1024 / 1024),3).' MB';
+			print '</p>';
+
+			print '<p>';
+			print 'Gesamt: 								'.round((memory_get_usage() /1024 /1024),3).' MB<br/>';
+			print 'Gesamt (real size): 		'.round((memory_get_usage(true) /1024 /1024),3).' MB';
+			print '</p>';
+
+			print '<p>';
+			print 'Peak: 									'.round((memory_get_peak_usage() /1024 /1024),3).' MB<br/>';
+			print 'Peak (real size): 			'.round((memory_get_peak_usage(true) /1024 /1024),3).' MB';
+			print '</p>';
+
+		}else{
+
+//------------------------------------------------------------------
+// 4. Durchlauf:
+// PDF zeichnen
+//------------------------------------------------------------------
+
+			// Bei Nachfahrenbaum
+			$keys = array_keys($people);
+			$family_maxwidth = $people[ $keys[0] ]['width_family']+((BOX_MARGIN_X+(BOX_PADDING*2))*((int)$xml->vars->count->columns.$content_stats[3])+(MARGIN_RIGHT*2));
+
+			//------------------------------------------------------------------
+			// Seitengröße
+			//------------------------------------------------------------------
+			include('inc/config_page.php');
+
+			//------------------------------------------------------------------
+			// Texte fuer Header+Footer
+			//------------------------------------------------------------------
+			if($_GET['lang'] == 'en')
+				include('inc/description_en.php');
+			else
+				include(DEFAULT_CONTENT);
+
+
+
+			// PDF initialisieren
+			$pdf = new XML2PDF(PDF_PAGE_ORIENTATION, PDF_UNIT, array($page_width,$page_height), true, 'UTF-8', false);
+
+			// Set document information
+			$pdf->SetAuthor(PDF_AUTHOR); //PDF_AUTHOR (default: t7even)
+			$pdf->SetTitle($content_title); //PDF_HEADER_TITLE
+			$pdf->SetSubject('');
+			$pdf->SetKeywords('');
+			$pdf->SetCreator(PDF_CREATOR); //PDF_CREATOR (default: treeprint.com)
+#			$pdf->SetProtection('modify');
+
+#			$pdf->SetPDFVersion('1.8');
+
+			// Header
+			$pdf->SetHeaderData('','', $content_title, $content_stats);
+			$pdf->setHeaderMargin(MARGIN_HEADER);
+
+			// Footer
+  	  $pdf->setFooterFont(array(FONTFAM_FOOTER, 'I', FONTSIZE_FOOTER));
+			define('FOOTER_DATA', $content_footer);
+			define('FOOTER_OFFSET_X_LOGO', $page_width-MARGIN_RIGHT-30);
+			define('FOOTER_OFFSET_Y_LOGO', $page_height-MARGIN_FOOTER-15);
+
+			// Page
+			$pdf->SetMargins(MARGIN_LEFT, MARGIN_TOP, MARGIN_RIGHT);
+			$pdf->SetAutoPageBreak(off, MARGIN_BOTTOM);
+			$pdf->SetCellPadding(CELL_PADDING); // Einzug fuer Boxes, Names, Dates
+
+			$pdf->AddPage(); //definiert Seite inkl Header und Footer
+
+
+			//------------------------------------------------------------------
+			// Content
+			//------------------------------------------------------------------
+			//Start-Nullpunkt fuer Personen
+#			$posX = OFFSET_X_BOX; $posY = OFFSET_Y_BOX;
+			$posX = MARGIN_LEFT; $posY = MARGIN_TOP;
+			$i_r = 0;
+
+			// Nullpunkt markieren
+#			$pdf->Line($posX, $posY, $posX+3, $posY);
+#			$pdf->Line($posX, $posY, $posX, $posY+3);
+
+
+			//------------------------------------------------------------------
+			// Aktuelle Generation (jeweils neue Zeile)
+			//------------------------------------------------------------------
+			foreach ($xml->generations->generation as $xml_generation) {
+
+				if($generation[ (int)$xml_generation['level'] ]['divorce'] == 'true'){
+					$gen_divorced = TRUE;
+					$height_reldate = BOX_HEIGHT_RELDATE+LINEHEIGHT_2;
+				}else{
+					$gen_divorced = FALSE;
+					$height_reldate = BOX_HEIGHT_RELDATE;
+				}
+
+#				$posY = $posY+BOX_MARGIN_Y;
+
+
+				//------------------------------------------------------------------
+				// Einzelne Personen positionieren und ausgeben
+				//------------------------------------------------------------------
+				foreach ($xml_generation->person as $xml_person) {
+
+    			// Personen-Array übergeben
+    			$person = $people[ (string)$xml_person['uid'] ];
+
+					// horiz. Position anhand XML errechnen
+					$posX = MARGIN_LEFT+$person['x_pos']+($xml_person['pos']*(BOX_MARGIN_X+(BOX_PADDING*2)));
+					// dabei Eltern ueber Kinder zentrieren
+					if($person['descendants'] > 1 && $_GET['align'] != 'left'){
+						// dabei lange Elternnamen beruecksichtigen
+						if(($person['width_family']/1.2) < $person['width_person'])
+#							$posX = $posX + (($person['width_family']/2)-($person['width_person']/2));
+#							$posX = $posX + (($person['width_family']-$person['width_person'])/2);
+#							$posX = $posX + ($person['width_family']/2);
+#							$posX = $posX + (($person['width_family']-BOX_MINWIDTH)/2)-($person['width_person']-$person['width_family']/2);
+#							$posX = $posX + (($person['width_family']-$person['width_person'])/2)-($person['width_person']-$person['width_family']/2);
+							$posX = $posX + (($person['width_family']-$person['width_person'])/2);
+						elseif(($person['width_family']) < $person['width_person'])
+#							$posX = $posX + (($person['width_family']-$person['width_person'])/2);
+							$posX = $posX;
+						else
+#							$posX = $posX + ($person['width_family']/2);
+#							$posX = $posX + (($person['width_family']-$person['width_person'])/2);
+							$posX = $posX + (($person['width_family']-BOX_MINWIDTH)/2);
+#							$posX = $posX + (($person['width_family']-$person['width_person'])/2);
+					}
+
+
+					// PERSON ausgeben
+					// Personendaten checken
+					$p_firstname = ($xml_person->firstname->default[length] == '0') ? 'unknown' : $xml_person->firstname->$name_display;
+					$p_lastname = ($xml_person->lastname->default[length] == '0') ? 'unknown' : $xml_person->lastname->default;
+					$p_birth = ($xml_person->birth[length] == '0') ? 'unknown' : $xml_person->birth->$default_date;
+					$p_death = ($xml_person->death[length] == '0') ? 'unknown' : $xml_person->death->$default_date;
+#					$p_age = ($xml_person->age[length] == 0) ? 'unknown' : $xml_person->age;
+					$p_wedding = ($xml_person->relation->wedding[length] == '0') ? 'unknown' : $xml_person->relation->wedding->$default_date;
+
+					// Wenn Person == 'Partner', Person mit Beziehungsdaten ausgeben (inkl ggf. Symbole), sonst nur Person
+					if( ($xml_generation['level'] %2) != 0 )
+					  //    PrintPerson( $posX, $posY, $width,                  $sex = 'm',       $firstname,   $lastname,   $birthdate, $deathdate, $age,         $partner, $type = 'none',          $marriagedate, $divorcedate, 	                             $gen_divorced = FALSE){
+						$pdf->PrintPerson( $posX, $posY, $person['width_person'], $xml_person->sex, $p_firstname, $p_lastname, $p_birth, $p_death, $xml_person->age, TRUE, $xml_person->relation->type, $p_wedding, $xml_person->relation->divorce->$default_date, $gen_divorced );
+					else
+						$pdf->PrintPerson( $posX, $posY, $person['width_person'], $xml_person->sex, $p_firstname, $p_lastname, $p_birth, $p_death, $xml_person->age, FALSE );
+
+
+					// BEZIEHUNGSLINIEN zeichnen
+					// Wenn Ehepartner von Person mehrere Ehen hatte && aktuelle Person nicht erster Partner
+					if( $people[ $person['partner_uid'] ]['relations'] > 1 && $person['relation_nr'] > 1){
+
+							$pdf->SetLineStyle(array('width' => LINESIZE_LOVE, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_LOVE, 'color' => array(LINECOLOR_LOVE)));
+#			 				$pdf->Line($posX-5, $posY+4.2, $posX-35, $posY+4.2);
+#			 				$pdf->Line($rlines[$i_r][0]+1, $rlines[$i_r][1]+1, $rlines[$i_r][0]+25, $rlines[$i_r][1]+1);
+#							$pdf->Cell('', '', 'BAM '.$i_r, 0, 1, TEXTALIGN);
+#							$pdf->Cell('', '', $xml_person->firstname->default, 0, 1, TEXTALIGN);
+#							$pdf->Cell('', '', $posX.'/'.$posY, 0, 1, TEXTALIGN);
+#							$pdf->Cell('', '', $xml_person['uid'], 0, 1, TEXTALIGN);
+#			 				$pdf->Line($rlines[ (int)$i_r-1 ][0]+1, $rlines[(int)$i_r-1 ][1]+1, $rlines[$i_r][0]+25, $rlines[$i_r][1]+1);
+
+
+			 				//Linienlaenge ueberpruefen
+			 				if( (($posX-BOX_PADDING-OFFSET_X_RELLINE)-($rlines[ (int)$i_r-1 ][0]+BOX_MINWIDTH+(BOX_PADDING*2)+OFFSET_X_RELLINE)) >= RELLINE_MINWIDTH){
+#				 				$pdf->Line($posX-(BOX_PADDING*3) , $posY+BOX_PADDING+(LINEHEIGHT_2/2), $posX-(BOX_PADDING*3)-30, $posY+BOX_PADDING+(LINEHEIGHT_2/2));
+#			 					$pdf->Line($rlines[ (int)$i_r-1 ][0]+BOX_MINWIDTH+BOX_PADDING+BOX_MARGIN_X+OFFSET_X_RELLINE, $rlines[(int)$i_r-1 ][1]+OFFSET_Y_RELLINE, $posX-BOX_PADDING-BOX_MARGIN_X-OFFSET_X_RELLINE, $posY+OFFSET_Y_RELLINE);
+			 					$pdf->Line($rlines[ (int)$i_r-1 ][0]+BOX_MINWIDTH+(BOX_PADDING*2)+OFFSET_X_RELLINE, $rlines[(int)$i_r-1 ][1]+BOX_MARGIN_Y+BOX_PADDING+(LINEHEIGHT_2/2)+OFFSET_Y_RELLINE, $posX-BOX_PADDING-OFFSET_X_RELLINE, $posY+BOX_MARGIN_Y+BOX_PADDING+(LINEHEIGHT_2/2)+OFFSET_Y_RELLINE);
+
+		// Testing - Nummer ausgeben
+#				 				$pdf->SetXY($posX-5,$posY);
+#								$pdf->Cell('', '', 'byb', 0, 1, TEXTALIGN);
+			 				}
+			 				else{
+		// Testing - Nummer ausgeben
+#				 				$pdf->SetXY($posX-5,$posY);
+#								$pdf->Cell('', '', 'bzb', 0, 1, TEXTALIGN);
+							}
+
+					}
+
+
+					//------------------------------------------------------------------
+					// Verwandschaftslinien
+					//------------------------------------------------------------------
+
+				 	// Linienstaerke (Bluts)Verwandschaft festlegen
+				 	$pdf->SetLineWidth(LINESIZE_BLOOD);
+				 	$pdf->SetLineStyle(array('width' => LINESIZE_BLOOD, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BLOOD, 'color' => array(LINECOLOR_BLOOD)));
+
+	 				// Zur Vereinfachung Variablennamen aus style uebersetzen
+	 				$cX = OFFSET_X_CHILDLINE;
+			 		$cY = OFFSET_Y_CHILDLINE;
+			 		$vl = LENGTH_VERTLINES;
+
+				 	// bei 'Kindern': Linien zeichnen (nur bei der allerersten Person (=Urahn) nicht)
+			 		if(($xml_generation['level'] %2) == 0 && $xml_generation['level'] > 0) {
+
+						// Obere senkrechte Linien zwischen Eltern + Kindern zeichnen
+						// (aus aufgezeichneten Koordinaten von Partnern)
+			 			if(isset($width[intval($xml_person['pos'])])){
+			 				$line_coords = $vlines[ $people[ (string)$xml_person['uid'] ]['parent_uid'] ];
+
+#			 				$pdf->SetLineStyle(array('width' => LINESIZE_BLOOD, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BLOOD, 'color' => array((int)$xml_person['pos']*10,(int)$xml_person['width']*10,(int)$xml_person['pos']*5)));
+#			 				$pdf->Line($vlines[$i_k][0], $vlines[$i_k][1], $vlines[$i_k][2], $vlines[$i_k][3]);
+			 				$pdf->Line($line_coords[0], $line_coords[1], $line_coords[2], $line_coords[3]);
+// Testing
+#			 				$pdf->SetXY($line_coords[0]+1,$line_coords[1]+1);
+#							$pdf->Cell('', '', $xml_person->firstname->default, 0, 1, TEXTALIGN);
+#							$pdf->Cell('', '', $vlines[$i_k][4], 0, 1, TEXTALIGN);
+#							$pdf->Cell('', '', $line_coords[4], 0, 1, TEXTALIGN);
+
+			 				$i_k++;
+			 			}
+
+				 		// Untere senkrechte Linie zwischen Eltern + Kind zeichnen
+#		 				$pdf->SetLineStyle(array('width' => LINESIZE_BLOOD, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BLOOD, 'color' => array(0,0,255)));
+			 			$pdf->Line($posX+BOX_PADDING+$cX, $posY+$cY-$vl, $posX+BOX_PADDING+$cX, $posY+$cY);
+
+
+			 			// Wenn Familie mit min. 2 Kindern:
+			 			// Koordinaten fuer waagrechte Linien merken (fuer spaeteren Durchlauf)
+			 			if($width[intval($xml_person['pos'])]>1) {
+			 				$hlines[$i_h][1] = $posX+BOX_PADDING+$cX;
+			 				$hlines[$i_h][2] = $posY-$vl;
+#			 				$hlines[$i_h][2] = $posY-$vl;
+			 				$parentwidth	= $width[intval($xml_person['pos'])]+$xml_person['pos'];
+						}
+						if($parentwidth == ($xml_person['pos']+$xml_person['width'])) {
+			 				$hlines[$i_h][3] = $posX+BOX_PADDING+$cX;
+			 				$hlines[$i_h][4] = $posY-$vl;
+#			 				$hlines[$i_h][4] = $posY-$vl;
+			 				unset($parentwidth);
+				 			$i_h++;
+			 		 	}
+			 		}
+
+
+					// Zur Vereinfachung Variablennamen aus style uebersetzen
+					$cX = OFFSET_X_PARTNERLINE;
+					$cY = OFFSET_Y_PARTNERLINE;
+					$vl =	LENGTH_VERTLINES;
+
+				 	// wenn aktuelle Person = Partner
+			 		if(($xml_generation['level'] %2) != 0) {
+						// Koordinaten fuer obere senkrechte Linie zwischen Eltern + Kind merken (fuer spaeteren Durchlauf)
+#				 		$vlines[$i_v] = array($posX+$cX, $posY+$cY+BOX_MAXHEIGHT+BOX_MARGIN_Y, $posX+$cX, $posY+$cY+BOX_MAXHEIGHT+BOX_MARGIN_Y+$vl);
+#				 		$vlines[$i_v] = array($posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+$cY, $posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+$cY+$vl);
+#						$i_v++;
+#				 		$vlines[ (string)$xml_person['uid'] ] = array($posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+$cY, $posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+$cY+$vl,$xml_person->firstname->default);
+#				 		$vlines[ (string)$xml_person['uid'] ] = array($posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+BOX_MARGIN_Y+$cY, $posX+$cX, $posY+$height_reldate+BOX_MAXHEIGHT+BOX_MARGIN_Y+$cY+$vl);
+				 		$vlines[ (string)$xml_person['uid'] ] = array($posX+BOX_PADDING+$cX, $posY+BOX_MARGIN_Y+$height_reldate+BOX_MARGIN_Y+BOX_MAXHEIGHT+BOX_MARGIN_Y+$cY, $posX+BOX_PADDING+$cX, $posY+BOX_MARGIN_Y+$height_reldate+BOX_MARGIN_Y+BOX_MAXHEIGHT+BOX_MARGIN_Y+$cY+$vl);
+
+						// Breite von Eltern (als Wert) zusammen mit Position (als Schluessel) in Array an Kind uebergeben
+						$width[ intval($xml_person['pos']) ] = intval($xml_person['width']);
+					}
+
+
+					//------------------------------------------------------------------
+					// Beziehungslinien
+					//------------------------------------------------------------------
+
+					$crX = OFFSET_X_RELLINE;
+					$crY = OFFSET_Y_RELLINE;
+
+				 	// Linienstil Beziehung festlegen
+				 	$pdf->SetLineStyle(array('width' => LINESIZE_LOVE, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_LOVE, 'color' => array(LINECOLOR_LOVE)));
+
+				 	// wenn aktuelle Person == Partner
+			 		// Linienkoordinaten unten (zu Kind) merken (fuer spaeteren Durchlauf)
+				 	if(($xml_generation['level'] %2) != 0) {
+#				 		$rlines[ $i_r ] = array($posX+$crX, $posY+$crY);
+				 		$rlines[ $i_r ] = array($posX, $posY);
+						$i_r++;
+					}
+				}
+				// Ende Person ------------------------------------------------------------------
+
+
+				// Y-Position fuer nächste 'Generation' (eins nach unten) verschieben
+				if((($xml_generation['level'] %2) == 0) && ($xml_generations['type'] = 'd'))
+					// Bei "Partnern" nur Boxhoehe + Abstand
+					$posY = $posY+BOX_MARGIN_Y+BOX_MAXHEIGHT;
+				else
+					// Bei "Kindern" zusaetzlich Versatz fuer Elternbeziehungsdatum + Verwandschaftslinien
+					$posY = $posY+BOX_MARGIN_Y+$height_reldate+BOX_MARGIN_Y+BOX_MAXHEIGHT+BOX_MARGIN_Y+($vl*2);
+
+    		unset($gen_divorced);
+			}
+			//------------------------------------------------------------------
+			// Ende Generation
+			//------------------------------------------------------------------
+
+	/*
+echo '<pre>';
+print_r($width);
+print_r($hlines);
+print_r($vlines);
+print_r($rlines);
+echo '</pre>';
+exit;
+	*/
+
+			//------------------------------------------------------------------
+			// waagrechte Verwandschaftslinien zeichnen
+			//------------------------------------------------------------------
+			$pdf->SetLineStyle(array('width' => LINESIZE_BLOOD, 'cap' => 'round', 'join' => 'round', 'dash' => LINETYPE_BLOOD, 'color' => array(LINECOLOR_BLOOD)));
+			if(count($hlines)!=0) {
+				for($i=0;$i<count($hlines);$i++) {
+					$hlines[$i] = $pdf->Line($hlines[$i][1], $hlines[$i][2], $hlines[$i][3], $hlines[$i][4]);
+				}
+			}
+
+
+			//------------------------------------------------------------------
+			// PDF ausgeben
+			//------------------------------------------------------------------
+			if($_GET['save'])
+				$pdf->Output(date("Y-m-d").'_'.$_GET['src'].'.pdf', 'D'); // Direktdownload
+			else
+				$pdf->Output(); // Im Browser anzeigen
+
+		}
+
+
+
+	}else{
+		// Wenn Probleme beim Lesen des XMLs
+		exit('Couldn\'t read XML-File.');
+	}
+
+
+?>
